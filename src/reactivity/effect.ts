@@ -1,21 +1,65 @@
+import { extend } from "../shared";
+
 let activeEffect;
+let shouldTrack = false;
 
 class ReactiveEffect {
     private _fn;
+    public scheduler;
+    deps = [];
+    active = true;
+    onStop?: () => void;
 
-    constructor(fn) {
+    constructor(fn, scheduler) {
         this._fn = fn;
+        this.scheduler = scheduler;
     }
 
     run() {
+        // 如果已经stop了 不能在收集依赖了 直接返回值
+        if (!this.active) {
+            return this._fn();
+        }
+
+        // 应该收集依赖
+        shouldTrack = true;
         activeEffect = this;
-        this._fn();
+        const result = this._fn();
+
+        // 重置
+        shouldTrack = false;
+        return result;
+
+    }
+
+    stop() {
+        // 设置一个状态 只清空一次
+        if (this.active) {
+            // 从dep中清空effect
+            // 怎么根据effect获取dep呢 需要在trigger反向收集
+            cleanupEffect(this);
+            if (this.onStop) {
+                this.onStop();
+            }
+
+            this.active = false;
+        }
     }
 }
 
-let targetMap = new Map();
+function cleanupEffect(effect) {
+    effect.deps.forEach((dep: any) => {
+        dep.delete(effect);
+    });
+
+    // 因为deps里面的dep都是空的了，可以把 effect.deps 清空
+    effect.deps.length = 0;
+}
+
+const targetMap = new Map();
 
 export function track(target, key) {
+    if (!isTracking()) return;
     // 创建映射关系：target -> key ——> dep
     let depsMap = targetMap.get(target);
     // 初始化 depsMap
@@ -29,8 +73,16 @@ export function track(target, key) {
         dep = new Set();
         depsMap.set(key, dep);
     }
+
+
     // 添加依赖
     dep.add(activeEffect);
+    // 反向收集 用来stop
+    activeEffect.deps.push(dep);
+}
+
+export function isTracking() {
+    return shouldTrack && activeEffect !== undefined;
 }
 
 export function trigger(target, key) {
@@ -38,11 +90,28 @@ export function trigger(target, key) {
     let depsMap = targetMap.get(target);
     let dep = depsMap.get(key);
     for (const effect of dep) {
-        effect.run();
+        if (effect.scheduler) {
+            effect.scheduler()
+        } else {
+            effect.run();
+        }
     }
 }
 
-export function effect(fn) {
-    const _effect = new ReactiveEffect(fn);
+export function effect(fn, options: any = {}) {
+    const _effect = new ReactiveEffect(fn, options.scheduler);
+    extend(_effect, options);
+
     _effect.run();
+
+    // 调用effect返回一个runner 调用runner也就是调用用户传过来的fn函数 获取返回值
+    // 这里注意run函数里面的 this 指向
+    const runner = _effect.run.bind(_effect);
+    runner.effect = _effect;
+    return runner;
+}
+
+
+export function stop(runner) {
+    runner.effect.stop();
 }
