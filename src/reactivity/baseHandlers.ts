@@ -1,12 +1,33 @@
 import {track, trigger} from "./effect";
+import {reactive, ReactiveFlags, readonly} from "./reactive"
+import {extend, isObject} from "../shared";
 
 const get = createGetter();
 const set = createSetter();
 const readonlyGet = createGetter(true);
+const shallowReadonlyGet = createGetter(true, true);
 
-function createGetter(isReadonly = false) {
+function createGetter(isReadonly = false, shallow = false) {
     return function get(target, key, receiver) {
+        // 实现isReactive、isReadonly 功能
+        if (key === ReactiveFlags.IS_REACTIVE) {
+            return !isReadonly
+        } else if (key === ReactiveFlags.IS_READONLY) {
+            return isReadonly
+        }
+
         const res = Reflect.get(target, key, receiver);
+
+        // 浅层的 如果是对象 不需要包裹一层了 直接返回res
+        if(shallow){
+            return res;
+        }
+
+        // 嵌套对象
+        if (isObject(res)) {
+            return isReadonly ? readonly(res) : reactive(res)
+        }
+
         if (!isReadonly) {
             track(target, key);
         }
@@ -29,7 +50,7 @@ export const mutableHandlers = {
 
 export const readonlyHandlers = {
     get: readonlyGet,
-    set(target, key, value, receiver){
+    set(target, key, value, receiver) {
         console.warn(
             `key :"${String(key)}" set 失败，因为 target 是 readonly 类型`,
             target
@@ -37,3 +58,7 @@ export const readonlyHandlers = {
         return true;
     }
 };
+
+export const shallowReadonlyHandlers = extend({}, readonlyHandlers, {
+    get: shallowReadonlyGet,
+});
