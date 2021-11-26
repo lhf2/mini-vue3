@@ -1,4 +1,4 @@
-import { extend } from "../shared";
+import {extend} from "../shared";
 
 let activeEffect;
 let shouldTrack = false;
@@ -74,7 +74,13 @@ export function track(target, key) {
         depsMap.set(key, dep);
     }
 
+    trackEffects(dep);
 
+}
+
+export function trackEffects(dep) {
+    // 看看 dep 之前有没有添加过，添加过的话 那么就不添加了
+    if (dep.has(activeEffect)) return;
     // 添加依赖
     dep.add(activeEffect);
     // 反向收集 用来stop
@@ -89,6 +95,10 @@ export function trigger(target, key) {
     // 取出对应的所有的依赖 遍历执行fn
     let depsMap = targetMap.get(target);
     let dep = depsMap.get(key);
+    triggerEffects(dep);
+}
+
+export function triggerEffects(dep) {
     for (const effect of dep) {
         if (effect.scheduler) {
             effect.scheduler()
