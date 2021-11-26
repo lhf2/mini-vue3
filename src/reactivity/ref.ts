@@ -7,6 +7,7 @@ class RefImpl {
     private _value;
     public dep;
     private _rawValue;
+    public __v_isRef = true;
 
     constructor(value) {
         // 如果传入ref的值是一个对象的话 需要用reactive包裹
@@ -44,4 +45,32 @@ function trackRefValue(ref) {
 
 export function ref(value) {
     return new RefImpl(value)
+}
+
+export function isRef(target) {
+    return !!target.__v_isRef;
+}
+
+export function unRef(target) {
+    return isRef(target) ? target.value : target;
+}
+
+export function proxyRefs(objectWithRefs) {
+    return new Proxy(objectWithRefs, {
+        // 如果结果是ref对象的话 直接unRef(res) 不需要.value直接就可以获取
+        get(target, key, receiver) {
+            const res = Reflect.get(target, key, receiver);
+            return unRef(res);
+        },
+        set(target, key, value, receiver) {
+            // 如果原先的值是ref 新值不是ref 直接修改ref.value
+            if (isRef(target[key]) && !isRef(value)) {
+                return (target[key].value = value)
+            } else {
+                // 如果两个都是ref 直接覆盖
+                const res = Reflect.set(target, key, value, receiver);
+                return res;
+            }
+        }
+    })
 }
