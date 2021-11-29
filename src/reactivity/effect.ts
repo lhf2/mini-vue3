@@ -116,7 +116,7 @@ export function effect(fn, options: any = {}) {
 
     // 调用effect返回一个runner 调用runner也就是调用用户传过来的fn函数 获取返回值
     // 这里注意run函数里面的 this 指向
-    const runner = _effect.run.bind(_effect);
+    const runner: any = _effect.run.bind(_effect);
     runner.effect = _effect;
     return runner;
 }

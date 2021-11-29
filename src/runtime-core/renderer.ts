@@ -2,6 +2,10 @@ import {createComponentInstance, setupComponent} from './components'
 
 export function render(vnode, container) {
     // 调用patch 根据 vnode 不同类型进行处理
+    patch(vnode, container);
+}
+
+function patch(vnode, container) {
     processComponent(vnode, container);
 }
 
@@ -23,7 +27,7 @@ function mountComponent(vnode, container) {
 function setupRenderEffect(instance, container) {
     const subTree = instance.render();
     // 递归调用patch
-    // patch(subTree, container);
+    patch(subTree, container);
 
 }
 
