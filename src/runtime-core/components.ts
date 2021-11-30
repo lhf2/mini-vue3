@@ -16,6 +16,16 @@ export function setupComponent(instance) {
 function setupStatefulComponent(instance) {
     // 获取用户传入的setup
     const component = instance.type;
+
+    instance.proxy = new Proxy({}, {
+        get(target, key) {
+            const {setupState} = instance;
+            if (key in setupState) {
+                return setupState[key]
+            }
+        }
+    });
+
     const {setup} = component;
     if (setup) {
         // 调用setup

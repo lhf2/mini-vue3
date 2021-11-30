@@ -9,7 +9,7 @@ export default {
         id: "root",
         class: ["red"],
       },
-      "hello mini-vue3");
+      this.msg);
   },
   setup() {
     return {

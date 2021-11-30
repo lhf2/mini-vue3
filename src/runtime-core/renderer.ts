@@ -62,7 +62,8 @@ function mountChildren(vnode, container) {
 
 // 调用render函数拆箱的过程
 function setupRenderEffect(instance, container) {
-    const subTree = instance.render();
+    const {proxy} = instance;
+    const subTree = instance.render.call(proxy);
     // 递归调用patch
     patch(subTree, container);
 
