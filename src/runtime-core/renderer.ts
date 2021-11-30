@@ -21,13 +21,13 @@ function processComponent(vnode, container) {
 }
 
 // 组件初始化
-function mountComponent(vnode, container) {
+function mountComponent(initialVNode, container) {
     // 1. 创建 component instance 对象
-    const instance = createComponentInstance(vnode);
+    const instance = createComponentInstance(initialVNode);
     // 2. setup component
     setupComponent(instance);
     // 3. setupRenderEffect 调用render函数获取子vnode 递归patch
-    setupRenderEffect(vnode, instance, container)
+    setupRenderEffect(instance, initialVNode, container)
 }
 
 function processElement(vnode, container) {
@@ -61,12 +61,12 @@ function mountChildren(vnode, container) {
 }
 
 // 调用render函数拆箱的过程
-function setupRenderEffect(vnode, instance, container) {
+function setupRenderEffect(instance, initialVNode, container) {
     const {proxy} = instance;
     const subTree = instance.render.call(proxy);
     // 递归调用patch
     patch(subTree, container);
-    vnode.el = subTree.el;
+    initialVNode.el = subTree.el;
 
 }
 
