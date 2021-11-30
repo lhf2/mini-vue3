@@ -1,4 +1,5 @@
 import {h} from "../../lib/mini-vue3.esm.js";
+import Foo from "./Foo.js";
 
 window.self = null;
 export default {
@@ -14,7 +15,12 @@ export default {
           console.log("click");
         }
       },
-      this.msg);
+      [
+        h("div", {}, this.msg),
+        h(Foo, {
+          count: 1
+        })
+      ]);
   },
   setup() {
     return {
