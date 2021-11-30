@@ -1,5 +1,5 @@
 import {createComponentInstance, setupComponent} from './components'
-import {isObject} from "../shared/index";
+import {ShapeFlags} from "../shared/ShapeFlags";
 
 export function render(vnode, container) {
     // 调用patch 根据 vnode 不同类型进行处理
@@ -7,11 +7,11 @@ export function render(vnode, container) {
 }
 
 function patch(vnode, container) {
+    const {shapeFlag} = vnode;
     // 区分 component 跟 element
-    if (typeof vnode.type === 'string') {
+    if (shapeFlag & ShapeFlags.ELEMENT) {
         processElement(vnode, container)
-
-    } else if (!!isObject(vnode.type)) {
+    } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
         processComponent(vnode, container);
     }
 }
@@ -36,7 +36,7 @@ function processElement(vnode, container) {
 
 function mountElement(vnode, container) {
     const el = (vnode.el = document.createElement(vnode.type));
-    const {props, children} = vnode;
+    const {props, children, shapeFlag} = vnode;
     // 处理props
     for (const key in props) {
         const val = props[key];
@@ -44,9 +44,9 @@ function mountElement(vnode, container) {
     }
     // 处理children
     // string array
-    if (typeof children === 'string') {
+    if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
         el.textContent = children
-    } else if (Array.isArray(children)) {
+    } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
         // 循环递归调用patch
         mountChildren(vnode, el);
     }
@@ -67,7 +67,6 @@ function setupRenderEffect(instance, initialVNode, container) {
     // 递归调用patch
     patch(subTree, container);
     initialVNode.el = subTree.el;
-
 }
 
 
