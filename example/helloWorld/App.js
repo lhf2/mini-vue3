@@ -1,4 +1,5 @@
 import {h} from "../../lib/mini-vue3.esm.js";
+
 window.self = null;
 export default {
   name: 'App',
@@ -9,6 +10,9 @@ export default {
       {
         id: "root",
         class: ["red"],
+        onClick() {
+          console.log("click");
+        }
       },
       this.msg);
   },
