@@ -27,7 +27,7 @@ function mountComponent(vnode, container) {
     // 2. setup component
     setupComponent(instance);
     // 3. setupRenderEffect 调用render函数获取子vnode 递归patch
-    setupRenderEffect(instance, container)
+    setupRenderEffect(vnode, instance, container)
 }
 
 function processElement(vnode, container) {
@@ -35,7 +35,7 @@ function processElement(vnode, container) {
 }
 
 function mountElement(vnode, container) {
-    const el = document.createElement(vnode.type);
+    const el = (vnode.el = document.createElement(vnode.type));
     const {props, children} = vnode;
     // 处理props
     for (const key in props) {
@@ -61,11 +61,12 @@ function mountChildren(vnode, container) {
 }
 
 // 调用render函数拆箱的过程
-function setupRenderEffect(instance, container) {
+function setupRenderEffect(vnode, instance, container) {
     const {proxy} = instance;
     const subTree = instance.render.call(proxy);
     // 递归调用patch
     patch(subTree, container);
+    vnode.el = subTree.el;
 
 }
 

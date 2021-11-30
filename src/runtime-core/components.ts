@@ -20,8 +20,13 @@ function setupStatefulComponent(instance) {
     instance.proxy = new Proxy({}, {
         get(target, key) {
             const {setupState} = instance;
-            if (key in setupState) {
-                return setupState[key]
+            // 通过 this.$el 获取根节点
+            if (key === '$el') {
+                return instance.vnode.el;
+            } else {
+                if (key in setupState) {
+                    return setupState[key]
+                }
             }
         }
     });
