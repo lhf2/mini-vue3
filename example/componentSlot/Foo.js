@@ -8,6 +8,10 @@ export default {
   render() {
     const foo = h("p", {}, "Foo");
     console.log(this.$slots);
-    return h("div", {}, [foo, renderSlots(this.$slots)]);
+    return h("div", {}, [
+      renderSlots(this.$slots, 'header'),
+      foo,
+      renderSlots(this.$slots, 'footer')
+    ]);
   }
 }
