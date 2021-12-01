@@ -1,4 +1,4 @@
-import {h} from "../../lib/mini-vue3.esm.js";
+import {h, renderSlots} from "../../lib/mini-vue3.esm.js";
 
 export default {
   name: 'Foo',
@@ -8,6 +8,6 @@ export default {
   render() {
     const foo = h("p", {}, "Foo");
     console.log(this.$slots);
-    return h("div", {}, [foo, this.$slots]);
+    return h("div", {}, [foo, renderSlots(this.$slots)]);
   }
 }
