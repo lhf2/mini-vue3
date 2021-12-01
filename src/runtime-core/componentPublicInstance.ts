@@ -2,7 +2,8 @@ import {hasOwn} from "../shared/index";
 
 const publicPropertiesMap = {
     // 通过 this.$el 获取根节点
-    $el: (i) => i.vnode.el
+    $el: (i) => i.vnode.el,
+    $slots: (i) => i.slots
 };
 
 export const PublicInstanceProxyHandlers = {
