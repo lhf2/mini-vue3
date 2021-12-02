@@ -1,6 +1,6 @@
 import {createComponentInstance, setupComponent} from './components'
 import {ShapeFlags} from "../shared/ShapeFlags";
-import {Fragment} from "./vnode";
+import {Fragment, Text} from "./vnode";
 
 export function render(vnode, container) {
     // 调用patch 根据 vnode 不同类型进行处理
@@ -12,6 +12,9 @@ function patch(vnode, container) {
     switch (type) {
         case Fragment:
             processFragment(vnode, container);
+            break;
+        case Text:
+            processText(vnode, container);
             break;
         default:
             // 区分 component 跟 element
@@ -28,6 +31,11 @@ function processFragment(vnode, container) {
     mountChildren(vnode, container);
 }
 
+function processText(vnode, container) {
+    const { children } = vnode;
+    const textNode = (vnode.el = document.createTextNode(children));
+    container.append(textNode);
+}
 function processComponent(vnode, container) {
     mountComponent(vnode, container);
 }

@@ -1,4 +1,4 @@
-import {h} from "../../lib/mini-vue3.esm.js";
+import {h, createTextVnode} from "../../lib/mini-vue3.esm.js";
 import Foo from "./Foo.js";
 
 export default {
@@ -22,7 +22,10 @@ export default {
 
     // 作用域插槽
     const foo = h(Foo, {}, {
-      header: ({age}) => h('p', {}, 'header' + age),
+      header: ({age}) => [
+        h('p', {}, 'header' + age),
+        createTextVnode("你好呀")
+      ],
       footer: () => h('p', {}, 'footer')
     });
     return h("div", {}, [app, foo])
