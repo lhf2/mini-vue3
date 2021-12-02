@@ -4,14 +4,16 @@ import {shallowReadonly} from "../reactivity/reactive";
 import {emit} from "./componentEmit";
 import {initSlots} from "./componentSlots";
 
-export function createComponentInstance(vnode) {
+export function createComponentInstance(vnode, parent) {
     const component = {
         vnode,
         type: vnode.type,
         setupState: {},
         props: {},
         slots: {},
-        emit: () => {}
+        emit: () => {},
+        provides: parent ? parent.provides : {},
+        parent
     };
 
     component.emit = emit.bind(null, component) as any;
@@ -60,6 +62,7 @@ function finishComponentSetup(instance) {
 }
 
 let currentInstance = null;
+
 export function getCurrentInstance() {
     return currentInstance;
 }
