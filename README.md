@@ -18,3 +18,17 @@
 - [x] 支持 unRef
 - [x] 支持 proxyRefs
 - [x] computed 的实现
+
+
+#### runtime-core
+
+- [x] 支持组件类型
+- [x] 支持 element 类型
+- [x] 支持 注册事件
+- [x] 支持 setup 可获取props、context
+- [x] 支持 slots
+- [x] 支持 Fragment
+- [x] 支持 Text 类型节点
+- [x] 支持 getCurrentInstance
+- [x] 支持 provide/inject
+- [x] 支持 createRenderer
