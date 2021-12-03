@@ -6,9 +6,9 @@ import {createAppApI} from "./createApp";
 
 export function createRenderer(options) {
     const {
-        createElement,
-        patchProp,
-        insert
+        createElement: hostCreateElement,
+        patchProp: hostPatchProp,
+        insert: hostInsert,
     } = options;
 
     function render(vnode, container) {
@@ -65,12 +65,12 @@ export function createRenderer(options) {
     }
 
     function mountElement(vnode, container, parentComponent) {
-        const el = (vnode.el = createElement(vnode.type));
+        const el = (vnode.el = hostCreateElement(vnode.type));
         const {props, children, shapeFlag} = vnode;
         // 处理props
         for (const key in props) {
             const val = props[key];
-            patchProp(el, key, val);
+            hostPatchProp(el, key, val);
         }
         // 处理children
         // string array
@@ -82,7 +82,7 @@ export function createRenderer(options) {
         }
 
         // container.append(el);
-        insert(el, container);
+        hostInsert(el, container);
     }
 
     function mountChildren(vnode, container, parentComponent) {
