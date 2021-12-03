@@ -3,6 +3,7 @@ import {initProps} from "./componentProps";
 import {shallowReadonly} from "../reactivity/reactive";
 import {emit} from "./componentEmit";
 import {initSlots} from "./componentSlots";
+import {proxyRefs} from "../reactivity/ref";
 
 export function createComponentInstance(vnode, parent) {
     const component = {
@@ -13,7 +14,9 @@ export function createComponentInstance(vnode, parent) {
         slots: {},
         emit: () => {},
         provides: parent ? parent.provides : {},
-        parent
+        parent,
+        isMounted: false,
+        subTree: {}
     };
 
     component.emit = emit.bind(null, component) as any;
@@ -50,7 +53,7 @@ function handleSetupResult(instance, setupResult) {
     // todo function
     // object
     if (typeof setupResult == 'object') {
-        instance.setupState = setupResult;
+        instance.setupState = proxyRefs(setupResult);
     }
     finishComponentSetup(instance);
 }
