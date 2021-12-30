@@ -238,6 +238,9 @@ export function createRenderer(options) {
 
             // 需要比对的节点数
             const toBePatched = e2 - s2 + 1;
+            // 创建 newIndex -> oldIndex 的映射关系 并完成初始化
+            const newIndexToOldIndexMap = new Array(toBePatched);
+            for (let i = 0; i < toBePatched; i++) newIndexToOldIndexMap[i] = 0;
 
             // 1. 删除老节点
 
@@ -253,15 +256,15 @@ export function createRenderer(options) {
             for (let i = s1; i <= e1; i++) {
                 const prevChild = c1[i];
 
-                let nextIndex;
+                let newIndex;
                 if (prevChild.key != null) {
                     // 如果老节点有key 直接从映射表中找在新节点有没有对应的key
-                    nextIndex = keyToNewIndexMap.get(prevChild.key);
+                    newIndex = keyToNewIndexMap.get(prevChild.key);
                 } else {
                     // 如果老节点没有设置key 遍历新节点查找是否是相同节点
                     for (let j = s2; j < e2; j++) {
                         if (isSomeVNodeType(prevChild, c2[j])) {
-                            nextIndex = j;
+                            newIndex = j;
                             break;
                         }
                     }
@@ -269,15 +272,38 @@ export function createRenderer(options) {
 
 
                 // 老节点在新节点中是否存在
-                if (nextIndex === undefined) {
+                if (newIndex === undefined) {
                     // 不存在 删除
                     hostRemove(prevChild.el);
                 } else {
                     // 存在 patch
-                    patch(prevChild, c2[nextIndex], container, parentComponent, null);
+                    // 这里i+1是因为如果i是0的话就跟初始化时一样了 我们默认0是需要移动的
+                    newIndexToOldIndexMap[newIndex - s2] = i + 1;
+                    patch(prevChild, c2[newIndex], container, parentComponent, null);
                 }
             }
 
+
+            // 2. 移动
+            // 获取最长递增子序列
+            const increasingNewIndexSequence = getSequence(newIndexToOldIndexMap);
+            // 需要倒序处理数组 因为顺序插入的话锚点不好确定
+            // 子序列的指针
+            let j = increasingNewIndexSequence.length - 1;
+
+            for (let i = toBePatched - 1; i >= 0; i--) {
+                const nextIndex = i + s2;
+                const nextChild = c2[nextIndex];
+                const anchor = nextIndex + 1 < l2 ? c2[nextIndex + 1].el : null;
+
+                if (newIndexToOldIndexMap[i] === 0) {
+                    // 需要移动
+                    patch(null, nextChild, container, parentComponent, anchor);
+                } else {
+                    // 不需要动
+                    j--;
+                }
+            }
 
         }
 
@@ -317,6 +343,47 @@ export function createRenderer(options) {
     return {
         createApp: createAppApI(render)
     }
+}
+
+function getSequence(arr) {
+    const p = arr.slice();
+    const result = [0];
+    let i, j, u, v, c;
+    const len = arr.length;
+    for (i = 0; i < len; i++) {
+        const arrI = arr[i];
+        if (arrI !== 0) {
+            j = result[result.length - 1];
+            if (arr[j] < arrI) {
+                p[i] = j;
+                result.push(i);
+                continue;
+            }
+            u = 0;
+            v = result.length - 1;
+            while (u < v) {
+                c = (u + v) >> 1;
+                if (arr[result[c]] < arrI) {
+                    u = c + 1;
+                } else {
+                    v = c;
+                }
+            }
+            if (arrI < arr[result[u]]) {
+                if (u > 0) {
+                    p[i] = result[u - 1];
+                }
+                result[u] = i;
+            }
+        }
+    }
+    u = result.length;
+    v = result[u - 1];
+    while (u-- > 0) {
+        result[u] = v;
+        v = p[v];
+    }
+    return result;
 }
 
 
