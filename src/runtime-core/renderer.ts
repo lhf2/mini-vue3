@@ -236,6 +236,8 @@ export function createRenderer(options) {
             let s1 = i;
             let s2 = i;
 
+            // 已经比对的节点数
+            let patched = 0;
             // 需要比对的节点数
             const toBePatched = e2 - s2 + 1;
             // 创建 newIndex -> oldIndex 的映射关系 并完成初始化
@@ -255,6 +257,12 @@ export function createRenderer(options) {
             // 遍历老节点判断是否在新节点内
             for (let i = s1; i <= e1; i++) {
                 const prevChild = c1[i];
+
+                // 优化删除逻辑
+                if (patched >= toBePatched) {
+                    hostRemove(prevChild.el);
+                    continue;
+                }
 
                 let newIndex;
                 if (prevChild.key != null) {
@@ -280,6 +288,7 @@ export function createRenderer(options) {
                     // 这里i+1是因为如果i是0的话就跟初始化时一样了 我们默认0是需要移动的
                     newIndexToOldIndexMap[newIndex - s2] = i + 1;
                     patch(prevChild, c2[newIndex], container, parentComponent, null);
+                    patched++;
                 }
             }
 
@@ -297,6 +306,7 @@ export function createRenderer(options) {
                 const anchor = nextIndex + 1 < l2 ? c2[nextIndex + 1].el : null;
 
                 if (newIndexToOldIndexMap[i] === 0) {
+
                     // 需要移动
                     patch(null, nextChild, container, parentComponent, anchor);
                 } else {
