@@ -244,6 +244,9 @@ export function createRenderer(options) {
             const newIndexToOldIndexMap = new Array(toBePatched);
             for (let i = 0; i < toBePatched; i++) newIndexToOldIndexMap[i] = 0;
 
+            let moved = false;
+            let maxNewIndexSoFar = 0;
+
             // 1. 删除老节点
 
             // 创建key跟newIndex的映射关系 方便判断老节点在不在新节点中
@@ -285,7 +288,16 @@ export function createRenderer(options) {
                     hostRemove(prevChild.el);
                 } else {
                     // 存在 patch
-                    // 这里i+1是因为如果i是0的话就跟初始化时一样了 我们默认0是需要移动的
+
+                    // 如果后面的index大于了前面的 就肯定要移动
+                    if (newIndex >= maxNewIndexSoFar) {
+                        maxNewIndexSoFar = newIndex;
+                    } else {
+                        moved = true;
+                    }
+
+
+                    // 这里i+1是因为如果i是0的话就跟初始化时一样了 我们默认0是需要新增的
                     newIndexToOldIndexMap[newIndex - s2] = i + 1;
                     patch(prevChild, c2[newIndex], container, parentComponent, null);
                     patched++;
@@ -295,7 +307,9 @@ export function createRenderer(options) {
 
             // 2. 移动
             // 获取最长递增子序列
-            const increasingNewIndexSequence = getSequence(newIndexToOldIndexMap);
+            const increasingNewIndexSequence = moved
+                ? getSequence(newIndexToOldIndexMap)
+                : [];
             // 需要倒序处理数组 因为顺序插入的话锚点不好确定
             // 子序列的指针
             let j = increasingNewIndexSequence.length - 1;
@@ -306,12 +320,16 @@ export function createRenderer(options) {
                 const anchor = nextIndex + 1 < l2 ? c2[nextIndex + 1].el : null;
 
                 if (newIndexToOldIndexMap[i] === 0) {
-
-                    // 需要移动
+                    // 新增
                     patch(null, nextChild, container, parentComponent, anchor);
-                } else {
-                    // 不需要动
-                    j--;
+                } else if (moved) {
+                    // 移动
+                    if (j < 0 || i != increasingNewIndexSequence[j]) {
+                        hostInsert(nextChild.el, container, anchor);
+                    } else {
+                        // 不需要动
+                        j--;
+                    }
                 }
             }
 
