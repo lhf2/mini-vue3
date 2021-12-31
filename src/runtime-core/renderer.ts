@@ -4,6 +4,7 @@ import {Fragment, Text} from "./vnode";
 import {createAppApI} from "./createApp";
 import {effect} from "../reactivity/effect";
 import {shouldUpdateComponent} from "./componentUpdateUtils";
+import {queueJobs} from "./scheduler";
 
 
 export function createRenderer(options) {
@@ -119,6 +120,7 @@ export function createRenderer(options) {
     }
 
     function patchElement(n1, n2, container, parentComponent, anchor) {
+        console.log('patchElement');
         // 修改props
         const el = (n2.el = n1.el);
         const oldProps = n1.props || {};
@@ -390,6 +392,11 @@ export function createRenderer(options) {
                 const preSubTree = instance.subTree;
                 instance.subTree = subTree;
                 patch(preSubTree, subTree, container, instance, anchor);
+            }
+        }, {
+            scheduler: function () {
+                // 收集同步任务的job
+                queueJobs(instance.update);
             }
         })
     }
