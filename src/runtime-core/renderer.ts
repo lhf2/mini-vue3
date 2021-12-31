@@ -3,6 +3,7 @@ import {ShapeFlags} from "../shared/ShapeFlags";
 import {Fragment, Text} from "./vnode";
 import {createAppApI} from "./createApp";
 import {effect} from "../reactivity/effect";
+import {shouldUpdateComponent} from "./componentUpdateUtils";
 
 
 export function createRenderer(options) {
@@ -50,17 +51,34 @@ export function createRenderer(options) {
     }
 
     function processComponent(n1, n2, container, parentComponent, anchor) {
-        mountComponent(n2, container, parentComponent, anchor);
+        if (!n1) {
+            mountComponent(n2, container, parentComponent, anchor);
+        } else {
+            updateComponent(n1, n2);
+        }
+
     }
 
     // 组件初始化
     function mountComponent(initialVNode, container, parentComponent, anchor) {
         // 1. 创建 component instance 对象
-        const instance = createComponentInstance(initialVNode, parentComponent);
+        const instance = (initialVNode.component = createComponentInstance(initialVNode, parentComponent));
         // 2. setup component
         setupComponent(instance);
         // 3. setupRenderEffect 调用render函数获取子vnode 递归patch
         setupRenderEffect(instance, initialVNode, container, anchor)
+    }
+
+    // 更新组件
+    function updateComponent(n1, n2) {
+        const instance = (n2.component = n1.component);
+        if (shouldUpdateComponent(n1, n2)) {
+            instance.next = n2;
+            instance.update();
+        } else {
+            n2.el = n1.el;
+            n2.vnode = n2;
+        }
     }
 
     function processElement(n1, n2, container, parentComponent, anchor) {
@@ -347,7 +365,7 @@ export function createRenderer(options) {
 
     // 调用render函数拆箱的过程
     function setupRenderEffect(instance, initialVNode, container, anchor) {
-        effect(() => {
+        instance.update = effect(() => {
             let {isMounted} = instance;
             // init
             if (!isMounted) {
@@ -359,6 +377,14 @@ export function createRenderer(options) {
                 instance.isMounted = true;
             } else {
                 // update
+
+                // 更新组件的props
+                const {vnode, next} = instance;
+                if (next) {
+                    next.el = vnode.el;
+                    updateComponentPreRender(instance, next);
+                }
+
                 const {proxy} = instance;
                 const subTree = instance.render.call(proxy);
                 const preSubTree = instance.subTree;
@@ -371,6 +397,12 @@ export function createRenderer(options) {
     return {
         createApp: createAppApI(render)
     }
+}
+
+function updateComponentPreRender(instance, nextVNode) {
+    instance.vnode = nextVNode;
+    nextVNode.next = null;
+    instance.props = nextVNode.props;
 }
 
 function getSequence(arr) {
