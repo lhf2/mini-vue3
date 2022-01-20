@@ -12,6 +12,7 @@ class RefImpl {
     constructor(value) {
         // 如果传入ref的值是一个对象的话 需要用reactive包裹
         this._value = convert(value);
+        //todo 原始值是用来set的时候跟新值做比较的？
         this._rawValue = value;
         this.dep = new Set();
     }
@@ -51,9 +52,11 @@ export function isRef(target) {
     return !!target.__v_isRef;
 }
 
+// 解构ref
 export function unRef(target) {
     return isRef(target) ? target.value : target;
 }
+
 
 export function proxyRefs(objectWithRefs) {
     return new Proxy(objectWithRefs, {

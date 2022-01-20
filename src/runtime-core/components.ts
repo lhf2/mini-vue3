@@ -31,15 +31,17 @@ export function setupComponent(instance) {
 }
 
 function setupStatefulComponent(instance) {
-    // 获取用户传入的setup
+    // 获取用户传入的setup 这里的instance.type刚开始就指向传入的根组件配置对象
     const component = instance.type;
 
+    //通过this获取到属性 判断setupState（setup返回值）中有没有此key，如果有返回。若无在看props中有没有
     instance.proxy = new Proxy({_: instance}, PublicInstanceProxyHandlers);
 
     const {setup} = component;
     if (setup) {
         setCurrentInstance(instance);
         // 调用setup
+        // setup 有两个参数 setup(props, { attrs, slots, emit, expose })
         const setupResult = setup(shallowReadonly(instance.props), {
             emit: instance.emit
         });
@@ -50,7 +52,7 @@ function setupStatefulComponent(instance) {
 }
 
 function handleSetupResult(instance, setupResult) {
-    // todo function
+    // todo function 如果是function 默认为render函数
     // object
     if (typeof setupResult == 'object') {
         instance.setupState = proxyRefs(setupResult);
@@ -61,6 +63,7 @@ function handleSetupResult(instance, setupResult) {
 // 设置 render 函数
 function finishComponentSetup(instance) {
     const component = instance.type;
+    // 这里的render函数是用户设置的render函数
     instance.render = component.render;
 }
 

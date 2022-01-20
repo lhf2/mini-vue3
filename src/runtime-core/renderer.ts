@@ -51,6 +51,8 @@ export function createRenderer(options) {
         container.append(textNode);
     }
 
+
+    // 处理组件类型
     function processComponent(n1, n2, container, parentComponent, anchor) {
         if (!n1) {
             mountComponent(n2, container, parentComponent, anchor);
@@ -60,17 +62,15 @@ export function createRenderer(options) {
 
     }
 
-    // 组件初始化
     function mountComponent(initialVNode, container, parentComponent, anchor) {
         // 1. 创建 component instance 对象
         const instance = (initialVNode.component = createComponentInstance(initialVNode, parentComponent));
         // 2. setup component
         setupComponent(instance);
-        // 3. setupRenderEffect 调用render函数获取子vnode 递归patch
+        // 3. setupRenderEffect 调用render函数获取子vnode 递归patch 拆箱的过程
         setupRenderEffect(instance, initialVNode, container, anchor)
     }
 
-    // 更新组件
     function updateComponent(n1, n2) {
         const instance = (n2.component = n1.component);
         if (shouldUpdateComponent(n1, n2)) {
@@ -82,6 +82,7 @@ export function createRenderer(options) {
         }
     }
 
+    // 处理element类型
     function processElement(n1, n2, container, parentComponent, anchor) {
         if (!n1) {
             // init
@@ -120,7 +121,6 @@ export function createRenderer(options) {
     }
 
     function patchElement(n1, n2, container, parentComponent, anchor) {
-        console.log('patchElement');
         // 修改props
         const el = (n2.el = n1.el);
         const oldProps = n1.props || {};

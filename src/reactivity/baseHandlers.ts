@@ -18,7 +18,7 @@ function createGetter(isReadonly = false, shallow = false) {
 
         const res = Reflect.get(target, key, receiver);
 
-        // 浅层的 如果是对象 不需要包裹一层了 直接返回res
+        // 浅层的 不执行嵌套对象的深度只读转换 (暴露原始值)
         if(shallow){
             return res;
         }
