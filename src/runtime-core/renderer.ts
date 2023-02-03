@@ -8,6 +8,7 @@ import {queueJobs} from "./scheduler";
 
 
 export function createRenderer(options) {
+    // 用户传入的特定平台相关的 API
     const {
         createElement: hostCreateElement,
         patchProp: hostPatchProp,
@@ -41,6 +42,7 @@ export function createRenderer(options) {
         }
     }
 
+    // Fragment 本身并不会渲染任何内容，所以渲染器只会渲染 Fragment 的子节点
     function processFragment(n1, n2, container, parentComponent, anchor) {
         mountChildren(n2.children, container, parentComponent, anchor);
     }
@@ -179,12 +181,13 @@ export function createRenderer(options) {
                 hostSetElementText(container, "");
                 mountChildren(c2, container, parentComponent, anchor);
             } else {
-                // array ——> array
+                // array ——> array diff算法
                 patchKeyedChildren(c1, c2, container, parentComponent, anchor);
             }
         }
     }
 
+    // 掐头去尾 + 最长递增子序列的 diff
     function patchKeyedChildren(c1, c2, container, parentComponent, anchor) {
         const l1 = c1.length;
         const l2 = c2.length;
@@ -354,8 +357,6 @@ export function createRenderer(options) {
             }
 
         }
-
-
     }
 
     function unmountChildren(children) {
@@ -379,7 +380,6 @@ export function createRenderer(options) {
                 instance.isMounted = true;
             } else {
                 // update
-
                 // 更新组件的props
                 const {vnode, next} = instance;
                 if (next) {

@@ -27,7 +27,11 @@ export class ReactiveEffect {
         const result = this._fn();
 
         // 重置
-        // todo 为什么需要重置呢？？ 因为shouldTrack是全局变量，下次如果还有新的effect进来是需要重置的。还有一点是因为如果修改响应式的值是自增的写法（user.age++），会先进行get操作获取user.age的值，这个时候在track的时候就不应该收集依赖了。
+        // todo 为什么需要重置呢？？ 
+        // 因为shouldTrack是全局变量，下次如果还有新的effect进来是需要重置的。
+        // 还有一点是因为如果修改响应式的值是自增的写法（user.age++），
+        // 会先进行get操作获取user.age的值，这个时候在track的时候就不应该收集依赖了。
+        // 否则会导致无限循环执行 栈溢出 因为自增既有获取又有设置
         shouldTrack = false;
         return result;
 
@@ -40,6 +44,7 @@ export class ReactiveEffect {
             // 从dep中清空effect
             // 怎么根据effect获取dep呢 需要在trigger反向收集
             cleanupEffect(this);
+            // 用户传入的 stop 回调函数
             if (this.onStop) {
                 this.onStop();
             }
@@ -77,9 +82,7 @@ export function track(target, key) {
     }
 
     trackEffects(dep);
-
 }
-
 export function trackEffects(dep) {
     // 看看 dep 之前有没有添加过，添加过的话 那么就不添加了
     // 通常是在修改响应式值的时候 trigger的时候会触发effect.run 执行fn 又会触发track
@@ -89,20 +92,18 @@ export function trackEffects(dep) {
     // 反向收集 用来stop
     activeEffect.deps.push(dep);
 }
-
 export function isTracking() {
     return shouldTrack && activeEffect !== undefined;
 }
-
 export function trigger(target, key) {
     // 取出对应的所有的依赖 遍历执行fn
     let depsMap = targetMap.get(target);
     let dep = depsMap.get(key);
     triggerEffects(dep);
 }
-
 export function triggerEffects(dep) {
     for (const effect of dep) {
+        // 调度器 把控制权交给用户
         if (effect.scheduler) {
             effect.scheduler()
         } else {

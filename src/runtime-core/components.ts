@@ -5,6 +5,7 @@ import {emit} from "./componentEmit";
 import {initSlots} from "./componentSlots";
 import {proxyRefs} from "../reactivity/ref";
 
+// 创建组件实例
 export function createComponentInstance(vnode, parent) {
     const component = {
         vnode,
@@ -24,7 +25,9 @@ export function createComponentInstance(vnode, parent) {
 }
 
 export function setupComponent(instance) {
+    // 初始化 props
     initProps(instance, instance.vnode.props);
+    // 初始化 slots
     initSlots(instance, instance.vnode.children);
     // 调用setup()
     setupStatefulComponent(instance);
