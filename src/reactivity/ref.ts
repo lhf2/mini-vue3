@@ -12,7 +12,7 @@ class RefImpl {
     constructor(value) {
         // 如果传入ref的值是一个对象的话 需要用reactive包裹
         this._value = convert(value);
-        //todo 原始值是用来set的时候跟新值做比较的？
+        // 原始值是用来 set 的时候跟新值做比较的，因为有可能是对象，通过 reactive 包裹了之后是 proxy，使用 Object.is 比较不出来
         this._rawValue = value;
         this.dep = new Set();
     }
@@ -66,7 +66,7 @@ export function proxyRefs(objectWithRefs) {
             return unRef(res);
         },
         set(target, key, value, receiver) {
-            // 如果原先的值是ref 新值不是ref 直接修改ref.value
+            // 如果原先的值是ref 新值不是ref，是原始值 直接修改ref.value
             if (isRef(target[key]) && !isRef(value)) {
                 return (target[key].value = value)
             } else {

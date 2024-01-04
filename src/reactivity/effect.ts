@@ -27,7 +27,6 @@ export class ReactiveEffect {
         const result = this._fn();
 
         // 重置
-        // todo 为什么需要重置呢？？ 
         // 因为shouldTrack是全局变量，下次如果还有新的effect进来是需要重置的。
         // 还有一点是因为如果修改响应式的值是自增的写法（user.age++），
         // 会先进行get操作获取user.age的值，这个时候在track的时候就不应该收集依赖了。
@@ -39,7 +38,7 @@ export class ReactiveEffect {
 
     stop() {
         // 设置一个状态 只清空一次
-        // todo 为什么只清空一次呢？？如果用户多次调用的话只清空一次
+        // 为什么只清空一次呢？？如果用户多次调用 stop 的话只清空一次，之前清过了就没必要再清了
         if (this.active) {
             // 从dep中清空effect
             // 怎么根据effect获取dep呢 需要在trigger反向收集
